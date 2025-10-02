@@ -1,0 +1,29 @@
+/* English Localization */
+
+"header_greeting" = "Hello Mike";
+"progress_title" = "Progress";
+"reset_today" = "Reset today";
+"tap_to_add_water" = "Tap to Add Water";
+"history_empty_title" = "No drinks yet";
+"history_empty_subtitle" = "Add water on Home to see your history here.";
+"calendar_title" = "Calendar";
+"goal_reached" = "Goal reached";
+"goal_missed" = "Goal missed";
+"hourly_reminders" = "Hourly reminders";
+"interval_title" = "Interval";
+"every_30_min" = "Every 30 min";
+"every_60_min" = "Every 60 min";
+"every_90_min" = "Every 90 min";
+"every_120_min" = "Every 120 min";
+"reminders_footer" = "When enabled, Siply will send repeating reminders to drink water at the selected interval.";
+"settings_title" = "Settings";
+"daily_goal" = "Daily Goal";
+"quick_add_step" = "Quick Add Step";
+"done_button" = "Done";
+
+"hello_name" = "Hello %@";
+"daily_entries_title" = "Entries";
+"daily_entries_empty" = "No drinks logged for this day.";
+"tab_home" = "Home";
+"tab_calendar" = "Calendar";
+"tab_reminders" = "Reminders";
