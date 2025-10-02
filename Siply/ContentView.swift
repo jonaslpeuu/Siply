@@ -34,7 +34,7 @@ struct NotificationManager {
         center.removeAllPendingNotificationRequests()
     }
 
-    static func scheduleRepeatingReminder(intervalMinutes: Int) async {
+    static func scheduleRepeatingReminder(intervalMinutes: Int, currentIntake: Int = 0, goal: Int = 2000) async {
         guard intervalMinutes >= 1 else { return }
         let center = UNUserNotificationCenter.current()
 
@@ -42,15 +42,62 @@ struct NotificationManager {
         center.removeAllPendingNotificationRequests()
 
         let content = UNMutableNotificationContent()
-        content.title = "Time to drink water"
-        content.body = "Stay hydrated. Log your intake in Siply."
+
+        // Random motivational message
+        let message = MotivationalMessages.random()
+        content.title = String(localized: "notification_title", defaultValue: "Stay Hydrated!")
+        content.body = message
         content.sound = .default
+        content.categoryIdentifier = "WATER_REMINDER"
+
+        // Custom data for notification
+        let progress = goal > 0 ? Int((Double(currentIntake) / Double(goal)) * 100) : 0
+        content.userInfo = [
+            "currentIntake": currentIntake,
+            "goal": goal,
+            "progress": progress
+        ]
+
+        // Badge shows progress percentage
+        content.badge = NSNumber(value: progress)
 
         let seconds = TimeInterval(intervalMinutes * 60)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(60, seconds), repeats: true)
 
         let request = UNNotificationRequest(identifier: "siply.water.reminder", content: content, trigger: trigger)
         try? await center.add(request)
+    }
+
+    static func setupNotificationCategories() {
+        let center = UNUserNotificationCenter.current()
+
+        // Quick actions in notifications
+        let addSmallAction = UNNotificationAction(
+            identifier: "ADD_250",
+            title: String(localized: "notification_action_small", defaultValue: "Add 250ml"),
+            options: []
+        )
+
+        let addMediumAction = UNNotificationAction(
+            identifier: "ADD_500",
+            title: String(localized: "notification_action_medium", defaultValue: "Add 500ml"),
+            options: []
+        )
+
+        let snoozeAction = UNNotificationAction(
+            identifier: "SNOOZE",
+            title: String(localized: "notification_action_snooze", defaultValue: "Remind me later"),
+            options: []
+        )
+
+        let category = UNNotificationCategory(
+            identifier: "WATER_REMINDER",
+            actions: [addSmallAction, addMediumAction, snoozeAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+
+        center.setNotificationCategories([category])
     }
 }
 
@@ -196,11 +243,20 @@ struct ContentView: View {
             if !hasSeenOnboarding {
                 showOnboarding = true
             }
+            // Setup notification categories
+            NotificationManager.setupNotificationCategories()
+
             // Removed animation block that sets phase
             Task { @MainActor in
                 if remindersEnabled {
                     let granted = await NotificationManager.requestAuthorization()
-                    if granted { await NotificationManager.scheduleRepeatingReminder(intervalMinutes: reminderIntervalMinutes) }
+                    if granted {
+                        await NotificationManager.scheduleRepeatingReminder(
+                            intervalMinutes: reminderIntervalMinutes,
+                            currentIntake: intake,
+                            goal: goal
+                        )
+                    }
                 }
             }
         }
@@ -655,7 +711,11 @@ struct ContentView: View {
                     Task { @MainActor in
                         let granted = await NotificationManager.requestAuthorization()
                         if granted {
-                            await NotificationManager.scheduleRepeatingReminder(intervalMinutes: reminderIntervalMinutes)
+                            await NotificationManager.scheduleRepeatingReminder(
+                                intervalMinutes: reminderIntervalMinutes,
+                                currentIntake: intake,
+                                goal: goal
+                            )
                         } else {
                             remindersEnabled = false
                         }
@@ -690,7 +750,13 @@ struct ContentView: View {
                 .pickerStyle(.segmented)
                 .onChange(of: reminderIntervalMinutes) { _, _ in
                     if remindersEnabled {
-                        Task { await NotificationManager.scheduleRepeatingReminder(intervalMinutes: reminderIntervalMinutes) }
+                        Task {
+                            await NotificationManager.scheduleRepeatingReminder(
+                                intervalMinutes: reminderIntervalMinutes,
+                                currentIntake: intake,
+                                goal: goal
+                            )
+                        }
                     }
                 }
             }
@@ -907,6 +973,41 @@ private struct DebugMenuView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
+                // Test Notifications Section
+                VStack(spacing: 12) {
+                    Text("Test Notifications")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Button(action: {
+                        Task {
+                            await sendTestNotification()
+                        }
+                    }) {
+                        Label("Send Test Notification Now", systemImage: "bell.badge")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+
+                    Button(action: {
+                        Task {
+                            await sendTestNotificationDelayed()
+                        }
+                    }) {
+                        Label("Send Test Notification (5 sec)", systemImage: "clock.badge")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.blue.opacity(0.1))
+                )
+
+                Divider()
+
                 Button(role: .destructive, action: resetAction) {
                     Label(String(localized: "debug_reset", defaultValue: "Reset app (show onboarding)"), systemImage: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)
@@ -926,6 +1027,51 @@ private struct DebugMenuView: View {
             .navigationTitle(String(localized: "debug_title", defaultValue: "Debug Menu"))
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+
+    private func sendTestNotification() async {
+        let center = UNUserNotificationCenter.current()
+        let granted = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+
+        guard granted == true else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "notification_title", defaultValue: "Stay Hydrated!")
+        content.body = MotivationalMessages.random()
+        content.sound = .default
+        content.categoryIdentifier = "WATER_REMINDER"
+        content.badge = 75
+
+        // Immediate trigger
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: "test.notification", content: content, trigger: trigger)
+
+        try? await center.add(request)
+    }
+
+    private func sendTestNotificationDelayed() async {
+        let center = UNUserNotificationCenter.current()
+        let granted = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+
+        guard granted == true else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "notification_title", defaultValue: "Stay Hydrated!")
+        content.body = MotivationalMessages.random()
+        content.sound = .default
+        content.categoryIdentifier = "WATER_REMINDER"
+        content.userInfo = [
+            "currentIntake": 1500,
+            "goal": 2000,
+            "progress": 75
+        ]
+        content.badge = 75
+
+        // 5 second delay
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+        let request = UNNotificationRequest(identifier: "test.notification.delayed", content: content, trigger: trigger)
+
+        try? await center.add(request)
     }
 }
 

@@ -8,422 +8,362 @@ struct OnboardingView: View {
 
     var onFinish: () -> Void
 
-    @State private var page: Int = 0
+    @State private var currentPage: Int = 0
     @FocusState private var isNameFieldFocused: Bool
 
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    private var totalPages: Int { slides.count + 1 }
-
-    private var progress: CGFloat {
-        guard totalPages > 0 else { return 0 }
-        return CGFloat(page + 1) / CGFloat(totalPages)
-    }
-
-    private var slides: [OnboardingSlide] {
-        [
-            OnboardingSlide(
-                id: 0,
-                title: String(localized: "onboarding_slide_hydrate_title", defaultValue: "Hydration made effortless"),
-                subtitle: String(localized: "onboarding_slide_hydrate_subtitle", defaultValue: "Siply turns your water intake into a living gauge with smooth waves and friendly feedback."),
-                icon: "drop.fill",
-                gradient: [
-                    Color(red: 0.35, green: 0.66, blue: 1.0),
-                    Color(red: 0.22, green: 0.42, blue: 0.99)
-                ],
-                accent: Color.white,
-                highlights: [
-                    .init(icon: "sparkles", text: String(localized: "onboarding_slide_hydrate_point1", defaultValue: "Live water gauge keeps progress vivid")),
-                    .init(icon: "bolt.heart", text: String(localized: "onboarding_slide_hydrate_point2", defaultValue: "Quick-add buttons for your go-to glass sizes"))
-                ]
-            ),
-            OnboardingSlide(
-                id: 1,
-                title: String(localized: "onboarding_slide_reminders_title", defaultValue: "Smart reminders, perfectly timed"),
-                subtitle: String(localized: "onboarding_slide_reminders_subtitle", defaultValue: "Set gentle nudges that match your flow and keep streaks alive with insights."),
-                icon: "bell.badge.waves.left.and.right.fill",
-                gradient: [
-                    Color(red: 0.66, green: 0.52, blue: 1.0),
-                    Color(red: 0.45, green: 0.41, blue: 1.0)
-                ],
-                accent: Color.white,
-                highlights: [
-                    .init(icon: "clock.badge.checkmark", text: String(localized: "onboarding_slide_reminders_point1", defaultValue: "Choose the cadence that fits your day")),
-                    .init(icon: "chart.bar.xaxis", text: String(localized: "onboarding_slide_reminders_point2", defaultValue: "History and stats keep you motivated"))
-                ]
-            )
-        ]
-    }
+    private let totalPages = 8
 
     var body: some View {
-        GeometryReader { proxy in
-            let safeInsets = proxy.safeAreaInsets
-            let safeHeight = max(proxy.size.height - safeInsets.top - safeInsets.bottom, 640)
-            let cardHeight = min(max(safeHeight * 0.58, 420), 540)
+        ZStack {
+            backgroundGradient
+                .ignoresSafeArea()
 
-            ZStack {
-                onboardingBackground
-                    .ignoresSafeArea()
+            TabView(selection: $currentPage) {
+                WelcomeScreen()
+                    .tag(0)
 
-                VStack(spacing: 22) {
-                    topBar
-                    progressIndicator
+                FeatureScreen(
+                    icon: "drop.fill",
+                    title: String(localized: "onboarding_feature1_title", defaultValue: "Track Your Hydration"),
+                    subtitle: String(localized: "onboarding_feature1_subtitle", defaultValue: "Beautiful water gauge that fills up as you drink throughout the day"),
+                    accentColor: Color.cyan
+                )
+                .tag(1)
 
-                    Spacer(minLength: 4)
+                FeatureScreen(
+                    icon: "bell.badge.fill",
+                    title: String(localized: "onboarding_feature2_title", defaultValue: "Smart Reminders"),
+                    subtitle: String(localized: "onboarding_feature2_subtitle", defaultValue: "Get gentle nudges to stay hydrated at the perfect intervals"),
+                    accentColor: Color.purple
+                )
+                .tag(2)
 
-                    TabView(selection: $page) {
-                        ForEach(slides) { slide in
-                            slideCard(for: slide)
-                                .frame(maxWidth: .infinity)
-                                .tag(slide.id)
-                                .padding(.horizontal, 2)
+                FeatureScreen(
+                    icon: "chart.bar.fill",
+                    title: String(localized: "onboarding_feature3_title", defaultValue: "History & Stats"),
+                    subtitle: String(localized: "onboarding_feature3_subtitle", defaultValue: "Track your progress and build healthy hydration habits"),
+                    accentColor: Color.green
+                )
+                .tag(3)
+
+                NameInputScreen(userName: $userName, isNameFieldFocused: $isNameFieldFocused)
+                    .tag(4)
+
+                GoalSetupScreen(goal: $goal)
+                    .tag(5)
+
+                ReminderSetupScreen(
+                    remindersEnabled: $remindersEnabled,
+                    reminderIntervalMinutes: $reminderIntervalMinutes
+                )
+                .tag(6)
+
+                ReadyScreen()
+                    .tag(7)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .ignoresSafeArea()
+
+            VStack {
+                HStack {
+                    if currentPage > 0 && currentPage < totalPages - 1 {
+                        Button(action: { withAnimation { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(Color.white)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Color.white.opacity(0.2)))
                         }
-
-                        personalizeCard
-                            .frame(maxWidth: .infinity)
-                            .tag(slides.count)
-                            .padding(.horizontal, 2)
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
-                    .frame(height: cardHeight, alignment: .center)
 
-                    Spacer(minLength: 12)
+                    Spacer()
 
-                    controls
+                    if currentPage < totalPages - 1 {
+                        Button(action: { onFinish() }) {
+                            Text(verbatim: String(localized: "onboarding_skip", defaultValue: "Skip"))
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Capsule().fill(Color.white.opacity(0.2)))
+                        }
+                    }
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, safeInsets.top + 28)
-                .padding(.bottom, max(safeInsets.bottom + 12, 44))
+                .padding(.top, 60)
+
+                Spacer()
+
+                if currentPage < totalPages - 1 {
+                    PageIndicator(currentPage: currentPage, totalPages: totalPages)
+                        .padding(.bottom, 20)
+
+                    Button(action: handleNext) {
+                        Text(verbatim: currentPage == totalPages - 2 ? String(localized: "onboarding_finish", defaultValue: "Get Started") : String(localized: "onboarding_next", defaultValue: "Next"))
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(Color(red: 0.2, green: 0.42, blue: 0.98))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(Color.white)
+                                    .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+                            )
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
+                } else {
+                    Button(action: onFinish) {
+                        Text(verbatim: String(localized: "onboarding_start", defaultValue: "Start Using Siply"))
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(Color.cyan)
+                                    .shadow(color: Color.cyan.opacity(0.4), radius: 20, x: 0, y: 10)
+                            )
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 40)
+                }
             }
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.85), value: page)
-        .onChange(of: page) { _, newValue in
-            if newValue == slides.count {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+        .onChange(of: currentPage) { _, newValue in
+            if newValue == 4 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                     isNameFieldFocused = true
                 }
             }
         }
     }
 
-    private var onboardingBackground: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.22, green: 0.37, blue: 0.92),
-                    Color(red: 0.18, green: 0.58, blue: 0.98)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            Circle()
-                .fill(Color.white.opacity(0.28))
-                .blur(radius: 90)
-                .frame(width: 320, height: 320)
-                .offset(x: -140, y: -260)
-
-            Circle()
-                .fill(Color.cyan.opacity(0.25))
-                .blur(radius: 120)
-                .frame(width: 360, height: 360)
-                .offset(x: 180, y: 340)
-        }
+    private var backgroundGradient: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.22, green: 0.37, blue: 0.92),
+                Color(red: 0.18, green: 0.58, blue: 0.98)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
-    private var topBar: some View {
-        HStack {
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.18))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "drop.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.white)
-                        .font(.system(size: 22, weight: .bold))
-                }
-                Text("Siply")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(Color.white.opacity(0.95))
+    private func handleNext() {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            if currentPage < totalPages - 1 {
+                currentPage += 1
+            } else {
+                onFinish()
+            }
+        }
+    }
+}
+
+// MARK: - Welcome Screen
+struct WelcomeScreen: View {
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.15))
+                    .frame(width: 200, height: 200)
+                    .blur(radius: 40)
+
+                Image(systemName: "drop.fill")
+                    .font(.system(size: 100, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.white, Color.white.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
+            }
+
+            VStack(spacing: 16) {
+                Text(verbatim: "Siply")
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white)
+
+                Text(verbatim: String(localized: "onboarding_welcome_subtitle", defaultValue: "Your personal hydration companion"))
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.9))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
 
             Spacer()
-
-            if page < totalPages - 1 {
-                Button(action: { onFinish() }) {
-                    Text(verbatim: String(localized: "onboarding_skip", defaultValue: "Skip"))
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule()
-                                .fill(Color.white.opacity(0.18))
-                        )
-                        .foregroundStyle(Color.white.opacity(0.9))
-                }
-                .buttonStyle(.plain)
-            }
+            Spacer()
         }
     }
+}
 
-    private var progressIndicator: some View {
-        GeometryReader { proxy in
-            let width = proxy.size.width
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.white.opacity(0.22))
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.95), Color.white.opacity(0.65)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: max(40, width * progress))
-            }
-        }
-        .frame(height: 8)
-        .padding(.top, 4)
-    }
+// MARK: - Feature Screen
+struct FeatureScreen: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let accentColor: Color
 
-    private func slideCard(for slide: OnboardingSlide) -> some View {
-        VStack(alignment: .leading, spacing: 24) {
+    var body: some View {
+        VStack(spacing: 40) {
+            Spacer()
+
             ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(LinearGradient(colors: slide.gradient, startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(height: 190)
-                    .shadow(color: Color.black.opacity(0.18), radius: 24, x: 0, y: 16)
+                Circle()
+                    .fill(Color.white.opacity(0.15))
+                    .frame(width: 220, height: 220)
+                    .blur(radius: 50)
 
                 Circle()
-                    .fill(Color.white.opacity(0.18))
-                    .frame(width: 140, height: 140)
-                    .offset(x: 90, y: -70)
+                    .fill(Color.white.opacity(0.25))
+                    .frame(width: 180, height: 180)
 
-                Image(systemName: slide.icon)
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(slide.accent)
-                    .font(.system(size: 68, weight: .bold))
-                    .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 8)
+                Image(systemName: icon)
+                    .font(.system(size: 80, weight: .bold))
+                    .foregroundStyle(accentColor)
+                    .shadow(color: Color.black.opacity(0.15), radius: 15, x: 0, y: 8)
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text(verbatim: slide.title)
-                    .font(.title2.weight(.bold))
+            VStack(spacing: 20) {
+                Text(verbatim: title)
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.white)
-                Text(verbatim: slide.subtitle)
-                    .font(.body)
+                    .multilineTextAlignment(.center)
+
+                Text(verbatim: subtitle)
+                    .font(.body.weight(.medium))
                     .foregroundStyle(Color.white.opacity(0.85))
-                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 40)
             }
 
-            VStack(spacing: 12) {
-                ForEach(slide.highlights) { highlight in
-                    highlightPill(highlight, accent: slide.accent)
-                }
+            Spacer()
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Name Input Screen
+struct NameInputScreen: View {
+    @Binding var userName: String
+    var isNameFieldFocused: FocusState<Bool>.Binding
+
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+
+            VStack(spacing: 20) {
+                Image(systemName: "person.circle.fill")
+                    .font(.system(size: 80, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.9))
+
+                Text(verbatim: String(localized: "onboarding_name_title", defaultValue: "What's your name?"))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white)
+                    .multilineTextAlignment(.center)
+
+                Text(verbatim: String(localized: "onboarding_name_description", defaultValue: "We'll use this to personalize your experience"))
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardBackground(cornerRadius: 32, reduceTransparency: reduceTransparency, colorScheme: colorScheme)
-    }
-
-    private var personalizeCard: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text(verbatim: String(localized: "onboarding_personalize_title", defaultValue: "Make Siply yours"))
-                .font(.title2.weight(.bold))
-                .foregroundStyle(Color.white)
-
-            Text(verbatim: String(localized: "onboarding_personalize_subtitle", defaultValue: "Add your name, daily goal, and reminder plan to start strong."))
-                .font(.body)
-                .foregroundStyle(Color.white.opacity(0.85))
-
-            inputSection
-
-            goalSection
-
-            reminderSection
-
-            Text(verbatim: String(localized: "onboarding_goal_help", defaultValue: "Tip: most people aim for 2,000–2,500 ml per day."))
-                .font(.footnote)
-                .foregroundStyle(Color.white.opacity(0.7))
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(verbatim: String(localized: "onboarding_permissions_note", defaultValue: "We’ll ask for notification permission if you enable reminders."))
-                .font(.footnote)
-                .foregroundStyle(Color.white.opacity(0.65))
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardBackground(cornerRadius: 32, reduceTransparency: reduceTransparency, colorScheme: colorScheme)
-    }
-
-    private var inputSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(verbatim: String(localized: "onboarding_name_label", defaultValue: "Your name"))
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.white.opacity(0.8))
 
             TextField(String(localized: "onboarding_name_placeholder", defaultValue: "Enter your name"), text: $userName)
                 .textInputAutocapitalization(.words)
                 .disableAutocorrection(true)
-                .padding(.vertical, 14)
-                .padding(.horizontal, 16)
+                .font(.title3.weight(.medium))
+                .foregroundStyle(Color(red: 0.2, green: 0.42, blue: 0.98))
+                .multilineTextAlignment(.center)
+                .padding(.vertical, 20)
+                .padding(.horizontal, 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white.opacity(0.18))
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.white)
+                        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
                 )
-                .foregroundStyle(Color.white)
-                .focused($isNameFieldFocused)
+                .padding(.horizontal, 40)
+                .focused(isNameFieldFocused)
+
+            Spacer()
+            Spacer()
         }
     }
+}
 
-    private var goalSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(verbatim: String(localized: "daily_goal", defaultValue: "Daily Goal"))
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.white.opacity(0.8))
+// MARK: - Goal Setup Screen
+struct GoalSetupScreen: View {
+    @Binding var goal: Int
 
-            HStack(spacing: 18) {
-                RoundedControlButton(systemName: "minus", action: { adjustGoal(by: -100) })
+    var body: some View {
+        VStack(spacing: 40) {
+            Spacer()
 
-                VStack(spacing: 4) {
-                    Text("\(goal) ml")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(Color.white)
-                    Text(verbatim: String(localized: "onboarding_goal_caption", defaultValue: "Fine-tune in 100 ml steps"))
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.55))
-                }
-                .frame(maxWidth: .infinity)
+            VStack(spacing: 20) {
+                Image(systemName: "target")
+                    .font(.system(size: 80, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.9))
 
-                RoundedControlButton(systemName: "plus", action: { adjustGoal(by: 100) })
+                Text(verbatim: String(localized: "onboarding_goal_title", defaultValue: "Daily Goal"))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white)
+
+                Text(verbatim: String(localized: "onboarding_goal_description", defaultValue: "How much water do you want to drink each day?"))
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
-            .padding(.vertical, 6)
+
+            VStack(spacing: 24) {
+                Text("\(goal) ml")
+                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white)
+                    .monospacedDigit()
+
+                HStack(spacing: 24) {
+                    Button(action: { adjustGoal(by: -250) }) {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(Color.white.opacity(0.9))
+                            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+                    }
+
+                    Button(action: { adjustGoal(by: 250) }) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(Color.white.opacity(0.9))
+                            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+                    }
+                }
+
+                Text(verbatim: String(localized: "onboarding_goal_tip", defaultValue: "Tip: Most people aim for 2,000–2,500 ml per day"))
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+            }
+            .padding(.vertical, 32)
+            .padding(.horizontal, 48)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.12))
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color.white.opacity(0.15))
             )
+            .padding(.horizontal, 40)
+
+            Spacer()
+            Spacer()
         }
-    }
-
-    private var reminderSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Toggle(isOn: $remindersEnabled.animation(.easeInOut(duration: 0.25))) {
-                Label {
-                    Text(verbatim: String(localized: "hourly_reminders", defaultValue: "Hourly reminders"))
-                        .foregroundStyle(Color.white)
-                } icon: {
-                    Image(systemName: "bell.badge")
-                        .foregroundStyle(Color.white)
-                }
-            }
-            .toggleStyle(SwitchToggleStyle(tint: Color.white))
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.12))
-            )
-
-            if remindersEnabled {
-                Picker(String(localized: "interval_title", defaultValue: "Interval"), selection: $reminderIntervalMinutes) {
-                    Text(verbatim: String(localized: "onboarding_interval_30", defaultValue: "30 min"))
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                        .tag(30)
-                    Text(verbatim: String(localized: "onboarding_interval_60", defaultValue: "60 min"))
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                        .tag(60)
-                    Text(verbatim: String(localized: "onboarding_interval_90", defaultValue: "90 min"))
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                        .tag(90)
-                    Text(verbatim: String(localized: "onboarding_interval_120", defaultValue: "120 min"))
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                        .tag(120)
-                }
-                .pickerStyle(.segmented)
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white.opacity(0.12))
-                )
-            }
-        }
-    }
-
-    private var controls: some View {
-        HStack(spacing: 16) {
-            if page > 0 {
-                Button(action: { withAnimation { page -= 1 } }) {
-                    controlLabel(text: String(localized: "onboarding_back", defaultValue: "Back"), isPrimary: false)
-                }
-                .buttonStyle(.plain)
-            } else {
-                Button(action: { onFinish() }) {
-                    controlLabel(text: String(localized: "onboarding_skip", defaultValue: "Skip"), isPrimary: false)
-                }
-                .buttonStyle(.plain)
-            }
-
-            Spacer(minLength: 0)
-
-            Button(action: handlePrimaryAction) {
-                controlLabel(text: page == totalPages - 1 ? String(localized: "onboarding_start", defaultValue: "Start") : String(localized: "onboarding_next", defaultValue: "Next"), isPrimary: true)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private func controlLabel(text: String, isPrimary: Bool) -> some View {
-        Text(verbatim: text)
-            .font(.headline.weight(.semibold))
-            .padding(.vertical, 14)
-            .padding(.horizontal, 28)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isPrimary ? Color.white : Color.white.opacity(0.18))
-            )
-            .foregroundStyle(isPrimary ? Color(red: 0.2, green: 0.42, blue: 0.98) : Color.white.opacity(0.92))
-            .shadow(color: isPrimary ? Color.black.opacity(0.18) : Color.clear, radius: isPrimary ? 12 : 0, x: 0, y: isPrimary ? 8 : 0)
-    }
-
-    private func highlightPill(_ highlight: OnboardingSlide.Highlight, accent: Color) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(accent.opacity(0.22))
-                    .frame(width: 36, height: 36)
-                Image(systemName: highlight.icon)
-                    .foregroundStyle(accent)
-                    .font(.system(size: 17, weight: .semibold))
-            }
-
-            Text(verbatim: highlight.text)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.white.opacity(0.95))
-                .fixedSize(horizontal: false, vertical: true)
-                .multilineTextAlignment(.leading)
-                .lineSpacing(2)
-                .layoutPriority(1)
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.12))
-        )
     }
 
     private func adjustGoal(by delta: Int) {
@@ -432,74 +372,144 @@ struct OnboardingView: View {
         let rounded = (clamped / 50) * 50
         goal = max(500, rounded)
     }
+}
 
-    private func handlePrimaryAction() {
-        if page < totalPages - 1 {
-            withAnimation { page += 1 }
-        } else {
-            onFinish()
-        }
-    }
+// MARK: - Reminder Setup Screen
+struct ReminderSetupScreen: View {
+    @Binding var remindersEnabled: Bool
+    @Binding var reminderIntervalMinutes: Int
 
-    private struct RoundedControlButton: View {
-        let systemName: String
-        let action: () -> Void
+    var body: some View {
+        VStack(spacing: 40) {
+            Spacer()
 
-        var body: some View {
-            Button(action: action) {
-                Image(systemName: systemName)
-                    .font(.system(size: 18, weight: .bold))
-                    .frame(width: 48, height: 48)
-                    .background(
-                        Circle()
-                            .fill(Color.white.opacity(0.22))
-                    )
+            VStack(spacing: 20) {
+                Image(systemName: "bell.badge.fill")
+                    .font(.system(size: 80, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.9))
+
+                Text(verbatim: String(localized: "onboarding_reminders_title", defaultValue: "Stay on Track"))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.white)
+
+                Text(verbatim: String(localized: "onboarding_reminders_description", defaultValue: "Get gentle reminders to drink water throughout the day"))
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
-            .buttonStyle(.plain)
-        }
-    }
-}
 
-private struct OnboardingSlide: Identifiable {
-    struct Highlight: Identifiable {
-        let id = UUID()
-        let icon: String
-        let text: String
-    }
-
-    let id: Int
-    let title: String
-    let subtitle: String
-    let icon: String
-    let gradient: [Color]
-    let accent: Color
-    let highlights: [Highlight]
-}
-
-private extension View {
-    func cardBackground(cornerRadius: CGFloat, reduceTransparency: Bool, colorScheme: ColorScheme) -> some View {
-        let baseLight = Color.white.opacity(colorScheme == .dark ? 0.15 : 0.5)
-        return self
-            .background(
-                Group {
-                    if reduceTransparency {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(baseLight)
-                    } else {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(Color.white.opacity(0.15))
-                            .background(
-                                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                                    .fill(Material.ultraThin)
-                            )
+            VStack(spacing: 24) {
+                Toggle(isOn: $remindersEnabled.animation(.easeInOut)) {
+                    HStack {
+                        Image(systemName: "bell.fill")
+                            .font(.title2)
+                            .foregroundStyle(Color.white)
+                        Text(verbatim: String(localized: "enable_reminders", defaultValue: "Enable Reminders"))
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(Color.white)
                     }
                 }
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(colorScheme == .dark ? 0.18 : 0.35), lineWidth: 1)
-            )
+                .toggleStyle(SwitchToggleStyle(tint: Color.cyan))
+                .padding(.vertical, 20)
+                .padding(.horizontal, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.white.opacity(0.15))
+                )
+
+                if remindersEnabled {
+                    VStack(spacing: 16) {
+                        Text(verbatim: String(localized: "reminder_interval", defaultValue: "Remind me every"))
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.white.opacity(0.8))
+
+                        Picker(String(localized: "interval_title", defaultValue: "Interval"), selection: $reminderIntervalMinutes) {
+                            Text(verbatim: "30 min").tag(30)
+                            Text(verbatim: "60 min").tag(60)
+                            Text(verbatim: "90 min").tag(90)
+                            Text(verbatim: "120 min").tag(120)
+                        }
+                        .pickerStyle(.segmented)
+                        .background(Color.white.opacity(0.15))
+                        .cornerRadius(12)
+                    }
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, 40)
+
+            if remindersEnabled {
+                Text(verbatim: String(localized: "onboarding_notification_permission", defaultValue: "We'll ask for notification permission next"))
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+
+            Spacer()
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Ready Screen
+struct ReadyScreen: View {
+    var body: some View {
+        VStack(spacing: 40) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.15))
+                    .frame(width: 200, height: 200)
+                    .blur(radius: 40)
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 120, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.green, Color.cyan],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
+            }
+
+            VStack(spacing: 20) {
+                Text(verbatim: String(localized: "onboarding_ready_title", defaultValue: "You're All Set!"))
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white)
+
+                Text(verbatim: String(localized: "onboarding_ready_subtitle", defaultValue: "Let's start your hydration journey"))
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(Color.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+
+            Spacer()
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Page Indicator
+struct PageIndicator: View {
+    let currentPage: Int
+    let totalPages: Int
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<totalPages, id: \.self) { index in
+                Capsule()
+                    .fill(index == currentPage ? Color.white : Color.white.opacity(0.3))
+                    .frame(width: index == currentPage ? 24 : 8, height: 8)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentPage)
+            }
+        }
     }
 }
 
