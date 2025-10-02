@@ -153,6 +153,9 @@ struct OnboardingView: View {
     }
 
     private func handleNext() {
+        // Dismiss keyboard before moving to next page
+        isNameFieldFocused = false
+
         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
             if currentPage < totalPages - 1 {
                 currentPage += 1
