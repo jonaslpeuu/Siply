@@ -6,7 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DD27DB342E8FDA2B00BC88C6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD27DB332E8FDA2B00BC88C6 /* WidgetKit.framework */; };
+		DD27DB362E8FDA2B00BC88C6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD27DB352E8FDA2B00BC88C6 /* SwiftUI.framework */; };
+		DD27DB452E8FDA2D00BC88C6 /* SiplyWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DD27DB312E8FDA2B00BC88C6 /* SiplyWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		DD27DB432E8FDA2D00BC88C6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD9F47CA2E87E91C00E3891C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DD27DB302E8FDA2B00BC88C6;
+			remoteInfo = SiplyWidgetExtension;
+		};
 		DD9F47E02E87E91D00E3891C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = DD9F47CA2E87E91C00E3891C /* Project object */;
@@ -23,13 +36,49 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		DD27DB462E8FDA2D00BC88C6 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DD27DB452E8FDA2D00BC88C6 /* SiplyWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		DD27DB312E8FDA2B00BC88C6 /* SiplyWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SiplyWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD27DB332E8FDA2B00BC88C6 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		DD27DB352E8FDA2B00BC88C6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		DD27DB782E8FDDA200BC88C6 /* SiplyWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SiplyWidgetExtension.entitlements; sourceTree = "<group>"; };
 		DD9F47D22E87E91C00E3891C /* Siply.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Siply.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD9F47DF2E87E91D00E3891C /* SiplyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SiplyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD9F47E92E87E91D00E3891C /* SiplyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SiplyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DD27DB492E8FDA2D00BC88C6 /* Exceptions for "SiplyWidget" folder in "SiplyWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DD27DB302E8FDA2B00BC88C6 /* SiplyWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		DD27DB372E8FDA2B00BC88C6 /* SiplyWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DD27DB492E8FDA2D00BC88C6 /* Exceptions for "SiplyWidget" folder in "SiplyWidgetExtension" target */,
+			);
+			path = SiplyWidget;
+			sourceTree = "<group>";
+		};
 		DD9F47D42E87E91C00E3891C /* Siply */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Siply;
@@ -48,6 +97,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		DD27DB2E2E8FDA2B00BC88C6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD27DB362E8FDA2B00BC88C6 /* SwiftUI.framework in Frameworks */,
+				DD27DB342E8FDA2B00BC88C6 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DD9F47CF2E87E91C00E3891C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,12 +130,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DD27DB322E8FDA2B00BC88C6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DD27DB332E8FDA2B00BC88C6 /* WidgetKit.framework */,
+				DD27DB352E8FDA2B00BC88C6 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DD9F47C92E87E91C00E3891C = {
 			isa = PBXGroup;
 			children = (
+				DD27DB782E8FDDA200BC88C6 /* SiplyWidgetExtension.entitlements */,
 				DD9F47D42E87E91C00E3891C /* Siply */,
 				DD9F47E22E87E91D00E3891C /* SiplyTests */,
 				DD9F47EC2E87E91D00E3891C /* SiplyUITests */,
+				DD27DB372E8FDA2B00BC88C6 /* SiplyWidget */,
+				DD27DB322E8FDA2B00BC88C6 /* Frameworks */,
 				DD9F47D32E87E91C00E3891C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +158,7 @@
 				DD9F47D22E87E91C00E3891C /* Siply.app */,
 				DD9F47DF2E87E91D00E3891C /* SiplyTests.xctest */,
 				DD9F47E92E87E91D00E3891C /* SiplyUITests.xctest */,
+				DD27DB312E8FDA2B00BC88C6 /* SiplyWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +166,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		DD27DB302E8FDA2B00BC88C6 /* SiplyWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD27DB4A2E8FDA2D00BC88C6 /* Build configuration list for PBXNativeTarget "SiplyWidgetExtension" */;
+			buildPhases = (
+				DD27DB2D2E8FDA2B00BC88C6 /* Sources */,
+				DD27DB2E2E8FDA2B00BC88C6 /* Frameworks */,
+				DD27DB2F2E8FDA2B00BC88C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DD27DB372E8FDA2B00BC88C6 /* SiplyWidget */,
+			);
+			name = SiplyWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = SiplyWidgetExtension;
+			productReference = DD27DB312E8FDA2B00BC88C6 /* SiplyWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		DD9F47D12E87E91C00E3891C /* Siply */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DD9F47F32E87E91D00E3891C /* Build configuration list for PBXNativeTarget "Siply" */;
@@ -102,10 +195,12 @@
 				DD9F47CE2E87E91C00E3891C /* Sources */,
 				DD9F47CF2E87E91C00E3891C /* Frameworks */,
 				DD9F47D02E87E91C00E3891C /* Resources */,
+				DD27DB462E8FDA2D00BC88C6 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DD27DB442E8FDA2D00BC88C6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				DD9F47D42E87E91C00E3891C /* Siply */,
@@ -173,6 +268,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					DD27DB302E8FDA2B00BC88C6 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					DD9F47D12E87E91C00E3891C = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -203,11 +301,19 @@
 				DD9F47D12E87E91C00E3891C /* Siply */,
 				DD9F47DE2E87E91D00E3891C /* SiplyTests */,
 				DD9F47E82E87E91D00E3891C /* SiplyUITests */,
+				DD27DB302E8FDA2B00BC88C6 /* SiplyWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		DD27DB2F2E8FDA2B00BC88C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DD9F47D02E87E91C00E3891C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -232,6 +338,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DD27DB2D2E8FDA2B00BC88C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DD9F47CE2E87E91C00E3891C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,6 +369,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		DD27DB442E8FDA2D00BC88C6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DD27DB302E8FDA2B00BC88C6 /* SiplyWidgetExtension */;
+			targetProxy = DD27DB432E8FDA2D00BC88C6 /* PBXContainerItemProxy */;
+		};
 		DD9F47E12E87E91D00E3891C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DD9F47D12E87E91C00E3891C /* Siply */;
@@ -269,6 +387,68 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		DD27DB472E8FDA2D00BC88C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SiplyWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KJWSWD7LJP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SiplyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SiplyWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = WhitoutCookies.Siply.SiplyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DD27DB482E8FDA2D00BC88C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SiplyWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KJWSWD7LJP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SiplyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SiplyWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = WhitoutCookies.Siply.SiplyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		DD9F47F12E87E91D00E3891C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -395,11 +575,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Siply/Siply.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KJWSWD7LJP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Siply;
+				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleTypeRole = Editor;\n    CFBundleURLName = \"com.whitoutcookies.siply\";\n    CFBundleURLSchemes =     (\n        siply\n    );\n}";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -409,7 +594,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = WhitoutCookies.Siply;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -427,11 +612,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Siply/Siply.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KJWSWD7LJP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Siply;
+				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleTypeRole = Editor;\n    CFBundleURLName = \"com.whitoutcookies.siply\";\n    CFBundleURLSchemes =     (\n        siply\n    );\n}";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -441,7 +631,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = WhitoutCookies.Siply;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -541,6 +731,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DD27DB4A2E8FDA2D00BC88C6 /* Build configuration list for PBXNativeTarget "SiplyWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD27DB472E8FDA2D00BC88C6 /* Debug */,
+				DD27DB482E8FDA2D00BC88C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		DD9F47CD2E87E91C00E3891C /* Build configuration list for PBXProject "Siply" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
