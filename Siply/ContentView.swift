@@ -206,6 +206,11 @@ struct ContentView: View {
     @State private var showOnboarding: Bool = false
     @AppStorage("has_seen_onboarding") private var hasSeenOnboarding: Bool = false
 
+    // Tutorial state
+    @AppStorage("has_seen_tutorial") private var hasSeenTutorial: Bool = false
+    @State private var showTutorial: Bool = false
+    @State private var tutorialStep: Int = 0
+
     // How much to add per tap (can be tweaked later or made configurable)
     @AppStorage("step_ml") private var step: Int = 150
     @AppStorage("reminders_enabled") private var remindersEnabled: Bool = false
@@ -236,6 +241,11 @@ struct ContentView: View {
             .safeAreaPadding(.top)
             .safeAreaPadding(.bottom, 120)
             .animation(nil, value: selectedTab)
+
+            // Tutorial overlay
+            if showTutorial {
+                tutorialOverlay
+            }
         }
         .preferredColorScheme(.light)
         .safeAreaInset(edge: .bottom) { bottomBar.padding(.bottom, 8) }
@@ -278,6 +288,13 @@ struct ContentView: View {
                             }
                         }
                     }
+                    // Start tutorial after onboarding
+                    if !hasSeenTutorial {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            showTutorial = true
+                            tutorialStep = 0
+                        }
+                    }
                 }
             )
         }
@@ -287,8 +304,9 @@ struct ContentView: View {
                     // Clear model & UI state
                     intake = 0
                     history.removeAll()
-                    // Reset onboarding flag so it shows again
+                    // Reset onboarding and tutorial flags
                     hasSeenOnboarding = false
+                    hasSeenTutorial = false
                     // Optionally disable reminders
                     remindersEnabled = false
                     // Close debug menu and show onboarding
@@ -303,12 +321,18 @@ struct ContentView: View {
     // MARK: - Header
     private var header: some View {
         HStack(alignment: .center) {
-            Text(String(format: String(localized: "hello_name", defaultValue: "Hello %@"), userName.isEmpty ? "Mike" : userName))
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .allowsTightening(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(format: String(localized: "hello_name", defaultValue: "Hello %@"), userName.isEmpty ? "Mike" : userName))
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .allowsTightening(true)
+
+                Text(Date().formatted(date: .abbreviated, time: .omitted))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             Spacer()
             Button {
                 if suppressSettingsTap {
@@ -317,18 +341,20 @@ struct ContentView: View {
                     showSettings = true
                 }
             } label: {
-                Image(systemName: "gearshape")
+                Image(systemName: "gearshape.fill")
                     .font(.title3)
-                    .padding(10)
+                    .foregroundStyle(.primary)
+                    .padding(12)
                     .background {
                         if reduceTransparency {
-                            Circle().fill(Color.white.opacity(0.2))
+                            Circle().fill(Color.white.opacity(0.35))
                         } else {
-                            Circle().fill(Material.ultraThin)
+                            Circle().fill(.ultraThinMaterial)
                         }
                     }
+                    .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
             }
-            .overlay(Circle().stroke(.white.opacity(0.35), lineWidth: 1))
+            .overlay(Circle().stroke(.white.opacity(0.5), lineWidth: 1.5))
             .accessibilityLabel(LocalizedStringKey(String(localized: "settings_title", defaultValue: "Settings")))
             .highPriorityGesture(
                 LongPressGesture(minimumDuration: 3.0, maximumDistance: 50)
@@ -359,20 +385,20 @@ struct ContentView: View {
 
     // MARK: - Top progress capsule with reset
     private var progressCapsule: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(String(localized: "progress_title", defaultValue: "Progress"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
                 Text("\(Int(round(progress * 100)))%")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.subheadline.weight(.bold).monospacedDigit())
+                    .foregroundStyle(.primary)
 
                 Button {
-                    withAnimation(.spring) {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         intake = 0
                         history.removeAll()
                         didReachGoal = false
@@ -381,16 +407,17 @@ struct ContentView: View {
                     UIImpactFeedbackGenerator(style: .soft).impactOccurred()
                 } label: {
                     Image(systemName: "arrow.counterclockwise")
-                        .font(.caption.weight(.semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
-                        .padding(6)
+                        .padding(8)
                         .background {
                             if reduceTransparency {
-                                Circle().fill(Color.white.opacity(0.15))
+                                Circle().fill(Color.white.opacity(0.25))
                             } else {
-                                Circle().fill(Material.ultraThin)
+                                Circle().fill(.ultraThinMaterial)
                             }
                         }
+                        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(LocalizedStringKey(String(localized: "reset_today", defaultValue: "Reset today")))
@@ -399,62 +426,74 @@ struct ContentView: View {
             ZStack(alignment: .leading) {
                 Group {
                     if reduceTransparency {
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .fill(Color.white.opacity(0.15))
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.2))
                     } else {
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .fill(Material.ultraThin)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
                     }
                 }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .stroke(.white.opacity(0.25), lineWidth: 1)
-                    )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(.white.opacity(0.4), lineWidth: 1.5)
+                )
 
                 GeometryReader { proxy in
                     let width = proxy.size.width
                     let height = proxy.size.height
                     let fillWidth = max(0, width * progress)
 
-                    RoundedRectangle(cornerRadius: height / 2, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color.blue.opacity(0.95), Color.cyan],
+                                colors: [Color.blue, Color.cyan.opacity(0.9)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.3), Color.clear],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                        )
                         .frame(width: fillWidth, height: height)
-                        .animation(.spring(response: 0.35, dampingFraction: 0.9), value: progress)
+                        .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: progress)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            .frame(height: 18)
+            .frame(height: 22)
 
             HStack {
                 Text("\(intake) ml")
-                    .font(.footnote.monospacedDigit())
+                    .font(.footnote.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.primary)
                 Spacer()
-                Text("\(goal) ml")
+                Text(String(localized: "goal_label", defaultValue: "Goal:") + " \(goal) ml")
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(12)
+        .padding(16)
         .background {
             if reduceTransparency {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.15))
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white.opacity(0.25))
             } else {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Material.ultraThin)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
             }
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(.white.opacity(0.35), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(.white.opacity(0.5), lineWidth: 1.5)
         )
+        .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
         .highPriorityGesture(
             DragGesture(minimumDistance: 20)
                 .onEnded { value in
@@ -468,18 +507,30 @@ struct ContentView: View {
 
     // MARK: - Water gauge (tap to add water)
     private var waterGauge: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             ZStack {
-                // Outer circle
+                // Outer ring with gradient
                 Circle()
-                    .stroke(.white.opacity(0.6), lineWidth: 1.5)
-                    .frame(width: 260, height: 260)
-                    .shadow(color: .white.opacity(0.2), radius: 8, x: 0, y: 2)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.7), Color.white.opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 3
+                    )
+                    .frame(width: 280, height: 280)
+                    .shadow(color: .white.opacity(0.3), radius: 12, x: 0, y: 4)
+
+                // Inner shadow circle
+                Circle()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(width: 276, height: 276)
 
                 // Water fill with animated wave
                 Circle()
                     .fill(Color.clear)
-                    .frame(width: 260, height: 260)
+                    .frame(width: 276, height: 276)
                     .overlay(
                         Group {
                             if progress > 0 {
@@ -489,15 +540,19 @@ struct ContentView: View {
                     )
                     .clipShape(Circle())
 
-                VStack(spacing: 4) {
+                VStack(spacing: 6) {
+                    Image(systemName: "hand.tap.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
                     Text(String(localized: "tap_to_add_water", defaultValue: "Tap to Add Water"))
-                        .font(.subheadline.weight(.semibold))
+                        .font(.callout.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
+                .opacity(progress < 0.1 ? 1 : 0.6)
 
                 if showCelebration {
                     CelebrationView()
-                        .frame(width: 260, height: 260)
+                        .frame(width: 280, height: 280)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
@@ -505,12 +560,12 @@ struct ContentView: View {
             .onTapGesture { addWater() }
             .accessibilityAddTraits(.isButton)
 
-            HStack(spacing: 6) {
-                Circle().fill(Color.white.opacity(0.9)).frame(width: 6, height: 6)
-                Circle().fill(Color.white.opacity(0.35)).frame(width: 6, height: 6)
-                Circle().fill(Color.white.opacity(0.35)).frame(width: 6, height: 6)
+            HStack(spacing: 8) {
+                Circle().fill(Color.blue).frame(width: 8, height: 8)
+                Circle().fill(Color.white.opacity(0.4)).frame(width: 8, height: 8)
+                Circle().fill(Color.white.opacity(0.4)).frame(width: 8, height: 8)
             }
-            .padding(.top, 6)
+            .padding(.top, 4)
         }
     }
 
@@ -535,32 +590,41 @@ struct ContentView: View {
     }
 
     private func labelCapsule(text: String, systemImage: String, gradientColors: [Color]) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
             Text(text)
+                .font(.callout.weight(.bold))
         }
-        .font(.subheadline.weight(.semibold))
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 22)
+        .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
         .background {
             if reduceTransparency {
-                Capsule().fill(Color.white.opacity(0.18))
+                Capsule().fill(Color.white.opacity(0.3))
             } else {
                 Capsule().fill(
                     LinearGradient(
                         colors: gradientColors,
-                        startPoint: .leading,
-                        endPoint: .trailing
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
                 )
             }
         }
         .overlay(
-            Capsule().stroke(.white.opacity(0.35), lineWidth: 1)
+            Capsule()
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.6), Color.white.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
         )
         .foregroundStyle(reduceTransparency ? Color.primary : Color.white)
-        .shadow(color: Color.black.opacity(reduceTransparency ? 0 : 0.1), radius: 8, x: 0, y: 4)
+        .shadow(color: gradientColors[0].opacity(reduceTransparency ? 0 : 0.4), radius: 12, x: 0, y: 6)
     }
 
     // MARK: - Stats
@@ -574,13 +638,14 @@ struct ContentView: View {
             progressCapsule
 
             // Kalender & Tagesübersicht
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 16) {
                 Text(String(localized: "calendar_title", defaultValue: "Calendar"))
-                    .font(.headline)
+                    .font(.title3.weight(.bold))
 
                 DatePicker("Datum", selection: $selectedDate, displayedComponents: [.date])
                     .datePickerStyle(.graphical)
                     .tint(.blue)
+                    .padding(.vertical, 8)
 
                 // Tageswerte
                 let total = dailyTotal(on: selectedDate)
@@ -588,45 +653,54 @@ struct ContentView: View {
 
                 HStack {
                     Label(selectedDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
+                        .font(.callout.weight(.medium))
                     Spacer()
                     Text("\(total) ml")
-                        .font(.headline.monospacedDigit())
+                        .font(.title3.weight(.bold).monospacedDigit())
                         .foregroundStyle(reached ? .green : .primary)
                 }
-                .padding(10)
+                .padding(14)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Material.ultraThin)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.ultraThinMaterial)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(.white.opacity(0.35), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(.white.opacity(0.4), lineWidth: 1.5)
                 )
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
 
                 // Zielstatus
-                HStack(spacing: 8) {
-                    Image(systemName: reached ? "checkmark.seal.fill" : "xmark.seal")
+                HStack(spacing: 10) {
+                    Image(systemName: reached ? "checkmark.seal.fill" : "xmark.seal.fill")
+                        .font(.title3)
                         .foregroundStyle(reached ? .green : .orange)
                     Text(reached ? String(localized: "goal_reached", defaultValue: "Goal reached") : String(localized: "goal_missed", defaultValue: "Goal missed"))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.primary)
                     Spacer()
                 }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(reached ? Color.green.opacity(0.1) : Color.orange.opacity(0.1))
+                )
             }
-            .padding()
+            .padding(18)
             .background {
                 if reduceTransparency {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.15))
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.white.opacity(0.25))
                 } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Material.ultraThin)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.ultraThinMaterial)
                 }
             }
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(.white.opacity(0.35), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(.white.opacity(0.5), lineWidth: 1.5)
             )
+            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
 
             dailyEntriesSection(for: selectedDate)
 
@@ -645,57 +719,75 @@ struct ContentView: View {
     private func dailyEntriesSection(for date: Date) -> some View {
         let dayEntries = entries(on: date)
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             Text(String(localized: "daily_entries_title", defaultValue: "Entries"))
-                .font(.headline)
+                .font(.title3.weight(.bold))
 
             if dayEntries.isEmpty {
-                Text(String(localized: "daily_entries_empty", defaultValue: "No drinks logged for this day."))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                HStack {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Image(systemName: "drop.slash")
+                            .font(.system(size: 40))
+                            .foregroundStyle(.secondary.opacity(0.6))
+                        Text(String(localized: "daily_entries_empty", defaultValue: "No drinks logged for this day."))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.vertical, 24)
+                    Spacer()
+                }
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(dayEntries.enumerated()), id: \.element.id) { index, entry in
-                        HStack(alignment: .center, spacing: 12) {
-                            Image(systemName: "clock")
-                                .foregroundStyle(.blue)
+                        HStack(alignment: .center, spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.15))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "drop.fill")
+                                    .font(.body)
+                                    .foregroundStyle(.blue)
+                            }
 
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text("\(entry.amount) ml")
-                                    .font(.headline.monospacedDigit())
+                                    .font(.headline.weight(.semibold).monospacedDigit())
                                 Text(entry.date.formatted(date: .omitted, time: .shortened))
-                                    .font(.footnote)
+                                    .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
 
                             Spacer()
                         }
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 12)
 
                         if index < dayEntries.count - 1 {
                             Divider()
-                                .padding(.leading, 36)
-                                .overlay(Color.white.opacity(0.2))
+                                .padding(.leading, 58)
+                                .overlay(Color.primary.opacity(0.1))
                         }
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
+        .padding(18)
         .background {
             if reduceTransparency {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.15))
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white.opacity(0.25))
             } else {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Material.ultraThin)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
             }
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(.white.opacity(0.35), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(.white.opacity(0.5), lineWidth: 1.5)
         )
+        .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
     }
 
     // MARK: - Reminders
@@ -704,7 +796,8 @@ struct ContentView: View {
             progressCapsule
 
             Toggle(isOn: $remindersEnabled) {
-                Label(String(localized: "hourly_reminders", defaultValue: "Hourly reminders"), systemImage: "bell")
+                Label(String(localized: "hourly_reminders", defaultValue: "Hourly reminders"), systemImage: "bell.fill")
+                    .font(.callout.weight(.semibold))
             }
             .onChange(of: remindersEnabled) { _, newValue in
                 if newValue {
@@ -725,22 +818,24 @@ struct ContentView: View {
                 }
             }
             .toggleStyle(.switch)
-            .padding()
+            .tint(.blue)
+            .padding(16)
             .background {
                 if reduceTransparency {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.15))
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.white.opacity(0.25))
                 } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Material.ultraThin)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.ultraThinMaterial)
                 }
             }
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(.white.opacity(0.35), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(.white.opacity(0.5), lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text(String(localized: "interval_title", defaultValue: "Interval"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.primary)
                 Picker("Interval", selection: $reminderIntervalMinutes) {
                     Text(String(localized: "every_30_min", defaultValue: "Every 30 min")).tag(30)
                     Text(String(localized: "every_60_min", defaultValue: "Every 60 min")).tag(60)
@@ -760,50 +855,69 @@ struct ContentView: View {
                     }
                 }
             }
-            .padding()
+            .padding(16)
             .background {
                 if reduceTransparency {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.15))
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.white.opacity(0.25))
                 } else {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Material.ultraThin)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.ultraThinMaterial)
                 }
             }
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(.white.opacity(0.35), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(.white.opacity(0.5), lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
 
-            Text(String(localized: "reminders_footer", defaultValue: "When enabled, Siply will send repeating reminders to drink water at the selected interval."))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(.blue)
+                Text(String(localized: "reminders_footer", defaultValue: "When enabled, Siply will send repeating reminders to drink water at the selected interval."))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.blue.opacity(0.1))
+            )
+
             Spacer()
         }
     }
 
     // MARK: - Bottom bar
     private var bottomBar: some View {
-        HStack(spacing: 28) {
-            tabButton(.home, system: "house", label: LocalizedStringKey("tab_home"))
+        HStack(spacing: 32) {
+            tabButton(.home, system: "house.fill", label: LocalizedStringKey("tab_home"))
             tabButton(.calendar, system: "calendar", label: LocalizedStringKey("tab_calendar"))
-            tabButton(.reminders, system: "bell", label: LocalizedStringKey("tab_reminders"))
+            tabButton(.reminders, system: "bell.fill", label: LocalizedStringKey("tab_reminders"))
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 20)
-        .frame(maxWidth: 320)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 28)
+        .frame(maxWidth: 340)
         .background(
             Group {
                 if reduceTransparency {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(Color.white.opacity(0.15))
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(Color.white.opacity(0.3))
                 } else {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(Material.ultraThin)
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(.ultraThinMaterial)
                 }
             }
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(.white.opacity(0.35), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.6), Color.white.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
         )
+        .shadow(color: .black.opacity(0.1), radius: 16, x: 0, y: 8)
         .frame(maxWidth: .infinity)
         .font(.title3)
         .foregroundStyle(.primary)
@@ -811,14 +925,21 @@ struct ContentView: View {
 
     private func tabButton(_ tab: Tab, system: String, label: LocalizedStringKey) -> some View {
         Button {
-            selectedTab = tab
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selectedTab = tab
+            }
         } label: {
-            Image(systemName: system)
-                .foregroundStyle(selectedTab == tab ? .blue : .primary)
-                .frame(width: 28, height: 28)
-                .background(
-                    Circle().fill(selectedTab == tab ? Color.white.opacity(0.25) : Color.clear)
-                )
+            VStack(spacing: 4) {
+                Image(systemName: system)
+                    .font(.system(size: 22, weight: selectedTab == tab ? .semibold : .regular))
+                    .foregroundStyle(selectedTab == tab ? Color.blue : Color.primary.opacity(0.6))
+                    .frame(width: 32, height: 32)
+                    .background(
+                        Circle()
+                            .fill(selectedTab == tab ? Color.blue.opacity(0.15) : Color.clear)
+                            .scaleEffect(selectedTab == tab ? 1 : 0.8)
+                    )
+            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -923,6 +1044,130 @@ struct ContentView: View {
         }
 
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+    }
+
+    // MARK: - Tutorial Overlay
+    @ViewBuilder
+    private var tutorialOverlay: some View {
+        ZStack {
+            // Dimmed background
+            Color.black.opacity(tutorialStep == 0 ? 0.7 : 0.5)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    // Prevent tap through
+                }
+
+            // Highlight the water gauge on step 0
+            if tutorialStep == 0 {
+                GeometryReader { geometry in
+                    Circle()
+                        .fill(Color.clear)
+                        .frame(width: 300, height: 300)
+                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2.5)
+                        .shadow(color: .white.opacity(0.8), radius: 30)
+                        .allowsHitTesting(false)
+                }
+            }
+
+            VStack {
+                Spacer()
+
+                VStack(spacing: 20) {
+                    if tutorialStep == 0 {
+                        VStack(spacing: 16) {
+                            Image(systemName: "hand.tap.fill")
+                                .font(.system(size: 50))
+                                .foregroundStyle(.white)
+
+                            Text(String(localized: "tutorial_step1_title", defaultValue: "Tap to Add Water"))
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(.white)
+
+                            Text(String(localized: "tutorial_step1_description", defaultValue: "Tap the water circle to track your water intake. You can also use the quick add buttons below."))
+                                .font(.callout)
+                                .foregroundStyle(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                    } else if tutorialStep == 1 {
+                        VStack(spacing: 16) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 50))
+                                .foregroundStyle(.white)
+
+                            Text(String(localized: "tutorial_step2_title", defaultValue: "Track Your History"))
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(.white)
+
+                            Text(String(localized: "tutorial_step2_description", defaultValue: "View your daily progress and track your hydration history in the calendar tab."))
+                                .font(.callout)
+                                .foregroundStyle(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                    } else if tutorialStep == 2 {
+                        VStack(spacing: 16) {
+                            Image(systemName: "bell.badge.fill")
+                                .font(.system(size: 50))
+                                .foregroundStyle(.white)
+
+                            Text(String(localized: "tutorial_step3_title", defaultValue: "Set Reminders"))
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(.white)
+
+                            Text(String(localized: "tutorial_step3_description", defaultValue: "Never forget to drink water! Enable reminders in the bell tab to stay hydrated."))
+                                .font(.callout)
+                                .foregroundStyle(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                    }
+
+                    Button(action: {
+                        if tutorialStep < 2 {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                tutorialStep += 1
+                                // Switch to respective tab
+                                if tutorialStep == 1 {
+                                    selectedTab = .calendar
+                                } else if tutorialStep == 2 {
+                                    selectedTab = .reminders
+                                }
+                            }
+                        } else {
+                            // Finish tutorial
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                showTutorial = false
+                                hasSeenTutorial = true
+                                selectedTab = .home
+                            }
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Text(tutorialStep < 2 ? String(localized: "tutorial_next", defaultValue: "Next") : String(localized: "tutorial_finish", defaultValue: "Got it!"))
+                                .font(.headline.weight(.bold))
+                            if tutorialStep < 2 {
+                                Image(systemName: "arrow.right")
+                                    .font(.headline.weight(.bold))
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title3)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
+                        )
+                    }
+                    .padding(.horizontal, 32)
+                }
+                .padding(.bottom, 150)
+            }
+        }
     }
 }
 
