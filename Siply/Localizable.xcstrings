@@ -1,43 +1,45 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%lld / %lld ml" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld / %2$lld ml"
-          }
-        }
-      }
-    },
     "%lld ml" : {
 
     },
     "%lld%%" : {
 
     },
-    "%lld%% • %@" : {
+    "Add Water" : {
+      "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wasser hinzufügen"
+          }
+        },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld%% • %2$@"
+            "state" : "translated",
+            "value" : "Add Water"
           }
         }
       }
     },
-    "Add ${amount}ml of water" : {
-
-    },
-    "Add Water" : {
-
-    },
     "Add water to your daily intake" : {
-
-    },
-    "Amount (ml)" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge Wasser zu deinem Tagesverbrauch hinzu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add water to your daily intake"
+          }
+        }
+      }
     },
     "calendar_title" : {
       "extractionState" : "manual",
@@ -375,6 +377,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Interval"
+          }
+        }
+      }
+    },
+    "live_activity_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeige deinen Hydrationsstatus auf dem Sperrbildschirm und in der Dynamic Island."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show your hydration progress on the Lock Screen and Dynamic Island."
+          }
+        }
+      }
+    },
+    "live_activity_toggle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Aktivität"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activity"
           }
         }
       }
@@ -1745,13 +1781,13 @@
         }
       }
     },
-    "tutorial_step1_title" : {
+    "tap_to_add_water" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tippe zum Hinzufügen"
+            "value" : "Tippe um Wasser hinzuzufügen"
           }
         },
         "en" : {
@@ -1762,87 +1798,22 @@
         }
       }
     },
-    "tutorial_step1_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tippe auf den Wasserkreis, um deine Wasseraufnahme zu tracken. Du kannst auch die Schnellzugabe-Buttons verwenden."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap the water circle to track your water intake. You can also use the quick add buttons below."
-          }
-        }
-      }
+    "Test Notifications" : {
+
     },
-    "tutorial_step2_title" : {
+    "tutorial_finish" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verlauf ansehen"
+            "value" : "Verstanden!"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Track Your History"
-          }
-        }
-      }
-    },
-    "tutorial_step2_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sieh deinen täglichen Fortschritt und tracke deinen Verlauf im Kalender-Tab."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View your daily progress and track your hydration history in the calendar tab."
-          }
-        }
-      }
-    },
-    "tutorial_step3_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erinnerungen setzen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Reminders"
-          }
-        }
-      }
-    },
-    "tutorial_step3_description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vergiss nie mehr zu trinken! Aktiviere Erinnerungen im Glocken-Tab, um hydratisiert zu bleiben."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Never forget to drink water! Enable reminders in the bell tab to stay hydrated."
+            "value" : "Got it!"
           }
         }
       }
@@ -1864,47 +1835,30 @@
         }
       }
     },
-    "tutorial_finish" : {
+    "tutorial_step1_description" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verstanden!"
+            "value" : "Tippe auf den Wasserkreis, um deine Wasseraufnahme zu tracken. Du kannst auch die Schnellzugabe-Buttons verwenden."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Got it!"
+            "value" : "Tap the water circle to track your water intake. You can also use the quick add buttons below."
           }
         }
       }
     },
-    "goal_label" : {
+    "tutorial_step1_title" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ziel:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Goal:"
-          }
-        }
-      }
-    },
-    "tap_to_add_water" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tippe um Wasser hinzuzufügen"
+            "value" : "Tippe zum Hinzufügen"
           }
         },
         "en" : {
@@ -1915,8 +1869,73 @@
         }
       }
     },
-    "Test Notifications" : {
-
+    "tutorial_step2_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sieh deinen täglichen Fortschritt und tracke deinen Verlauf im Kalender-Tab."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View your daily progress and track your hydration history in the calendar tab."
+          }
+        }
+      }
+    },
+    "tutorial_step2_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verlauf ansehen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track Your History"
+          }
+        }
+      }
+    },
+    "tutorial_step3_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergiss nie mehr zu trinken! Aktiviere Erinnerungen im Glocken-Tab, um hydratisiert zu bleiben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never forget to drink water! Enable reminders in the bell tab to stay hydrated."
+          }
+        }
+      }
+    },
+    "tutorial_step3_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erinnerungen setzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Reminders"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

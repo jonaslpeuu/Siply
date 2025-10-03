@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UserNotifications
+import ActivityKit
 
 // MARK: - Models
 struct IntakeEntry: Identifiable, Hashable {
@@ -16,6 +17,43 @@ struct IntakeEntry: Identifiable, Hashable {
 }
 
 enum Tab: CaseIterable, Hashable { case home, calendar, reminders }
+
+// Darwin Notification Observer for Live Activity
+class DarwinNotificationObserver {
+    var onWaterAdded: (() -> Void)?
+
+    init() {
+        setupObserver()
+    }
+
+    private func setupObserver() {
+        let notificationName = "com.siply.waterAdded" as CFString
+        let observer = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            observer,
+            { (center, observer, name, object, userInfo) in
+                guard let observer = observer else { return }
+                let mySelf = Unmanaged<DarwinNotificationObserver>.fromOpaque(observer).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    mySelf.onWaterAdded?()
+                }
+            },
+            notificationName,
+            nil,
+            .deliverImmediately
+        )
+        print("✅ Darwin notification observer setup complete")
+    }
+
+    deinit {
+        CFNotificationCenterRemoveEveryObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        )
+    }
+}
 
 // Local notification helper
 struct NotificationManager {
@@ -187,6 +225,7 @@ struct WaterWaves: View {
 
 struct ContentView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Binding var addWaterAmount: Int?
 
     // Core state
     @State private var goal: Int = 2000 // ml
@@ -215,6 +254,10 @@ struct ContentView: View {
     @AppStorage("step_ml") private var step: Int = 150
     @AppStorage("reminders_enabled") private var remindersEnabled: Bool = false
     @AppStorage("reminder_interval_minutes") private var reminderIntervalMinutes: Int = 60
+    @AppStorage("live_activity_enabled") private var liveActivityEnabled: Bool = false
+
+    // Darwin notification observer
+    @State private var darwinObserver: DarwinNotificationObserver?
 
     var progress: CGFloat {
         guard goal > 0 else { return 0 }
@@ -249,12 +292,33 @@ struct ContentView: View {
         }
         .preferredColorScheme(.light)
         .safeAreaInset(edge: .bottom) { bottomBar.padding(.bottom, 8) }
+        .onChange(of: addWaterAmount) { oldValue, newValue in
+            if let amount = newValue {
+                addWater(amount: amount)
+                addWaterAmount = nil
+            }
+        }
         .onAppear {
             if !hasSeenOnboarding {
                 showOnboarding = true
             }
             // Setup notification categories
             NotificationManager.setupNotificationCategories()
+
+            // Setup Darwin notification observer for Live Activity
+            let observer = DarwinNotificationObserver()
+            observer.onWaterAdded = { [self] in
+                checkPendingWater()
+            }
+            darwinObserver = observer
+
+            // Check for pending water from App Group
+            checkPendingWater()
+
+            // Setup timer to check App Group periodically - runs in background too
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+                checkPendingWater()
+            }
 
             // Removed animation block that sets phase
             Task { @MainActor in
@@ -268,7 +332,22 @@ struct ContentView: View {
                         )
                     }
                 }
+
+                // Start Live Activity if enabled
+                if liveActivityEnabled {
+                    if #available(iOS 16.1, *) {
+                        await LiveActivityManager.shared.startActivity(
+                            userName: userName.isEmpty ? "Mike" : userName,
+                            currentIntake: intake,
+                            goal: goal
+                        )
+                    }
+                }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            // Check for pending water when app returns to foreground
+            checkPendingWater()
         }
         .sheet(isPresented: $showSettings) { settingsSheet }
         .fullScreenCover(isPresented: $showOnboarding) {
@@ -881,6 +960,58 @@ struct ContentView: View {
                     .fill(Color.blue.opacity(0.1))
             )
 
+            // Live Activity Toggle
+            Toggle(isOn: $liveActivityEnabled) {
+                Label(String(localized: "live_activity_toggle", defaultValue: "Live Activity"), systemImage: "circle.hexagonpath.fill")
+                    .font(.callout.weight(.semibold))
+            }
+            .onChange(of: liveActivityEnabled) { _, newValue in
+                if newValue {
+                    if #available(iOS 16.1, *) {
+                        Task {
+                            await LiveActivityManager.shared.startActivity(
+                                userName: userName.isEmpty ? "Mike" : userName,
+                                currentIntake: intake,
+                                goal: goal
+                            )
+                        }
+                    }
+                } else {
+                    if #available(iOS 16.1, *) {
+                        Task {
+                            await LiveActivityManager.shared.endActivity()
+                        }
+                    }
+                }
+            }
+            .toggleStyle(.switch)
+            .tint(.blue)
+            .padding(16)
+            .background {
+                if reduceTransparency {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.white.opacity(0.25))
+                } else {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                }
+            }
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(.white.opacity(0.5), lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 6)
+
+            HStack(spacing: 10) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(.cyan)
+                Text(String(localized: "live_activity_footer", defaultValue: "Show your hydration progress on the Lock Screen and Dynamic Island."))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.cyan.opacity(0.1))
+            )
+
             Spacer()
         }
     }
@@ -1002,6 +1133,35 @@ struct ContentView: View {
             }
         }
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+
+        // Update Live Activity
+        if #available(iOS 16.1, *) {
+            Task {
+                await LiveActivityManager.shared.updateActivity(
+                    currentIntake: newValue,
+                    goal: goal
+                )
+            }
+        }
+    }
+
+    private func checkPendingWater() {
+        guard let userDefaults = UserDefaults(suiteName: "group.WhitoutCookies.Siply"),
+              let timestamp = userDefaults.object(forKey: "pendingWaterTimestamp") as? TimeInterval,
+              Date().timeIntervalSince1970 - timestamp < 10.0, // Only process if less than 10 seconds old
+              let amount = userDefaults.object(forKey: "pendingWaterAmount") as? Int else {
+            return
+        }
+
+        print("📱 Processing water from Live Activity: \(amount)ml")
+
+        // Clear the pending values immediately to avoid duplicate processing
+        userDefaults.removeObject(forKey: "pendingWaterAmount")
+        userDefaults.removeObject(forKey: "pendingWaterTimestamp")
+        userDefaults.synchronize()
+
+        // Add water
+        addWater(amount: amount)
     }
 
     private func removeWater(amount: Int) {
@@ -1044,6 +1204,16 @@ struct ContentView: View {
         }
 
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+
+        // Update Live Activity
+        if #available(iOS 16.1, *) {
+            Task {
+                await LiveActivityManager.shared.updateActivity(
+                    currentIntake: newValue,
+                    goal: goal
+                )
+            }
+        }
     }
 
     // MARK: - Tutorial Overlay
@@ -1321,5 +1491,5 @@ private struct DebugMenuView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(addWaterAmount: .constant(nil))
 }
